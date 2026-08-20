@@ -29,14 +29,21 @@ jobs:
 
       - name: Generate Dummy Files and Build APK
         run: |
-          # 1. Create debug keystore
+          # 1. Create debug keystores
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           mkdir -p ~/.android
           cp debug.keystore ~/.android/debug.keystore
 
-          # 2. Create google-services.json matching the exact app package name
+          # 2. Auto-detect project package name
+          PKG_NAME=$(grep -rE "(applicationId|namespace)\s*=?\s*[\"'][^\"']+[\"']" app/ | sed -E "s/.*[\"']([^\"']+)[\"'].*/\1/" | head -n 1)
+          if [ -z "$PKG_NAME" ]; then
+            PKG_NAME="com.aistudio.clock.qvrz"
+          fi
+          echo "Detected package name: $PKG_NAME"
+
+          # 3. Create google-services.json matching the detected package name
           mkdir -p app
-          cat << 'EOF' > app/google-services.json
+          cat << EOF > app/google-services.json
           {
             "project_info": {
               "project_number": "123456789012",
@@ -48,7 +55,7 @@ jobs:
                 "client_info": {
                   "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef",
                   "android_client_info": {
-                    "package_name": "com.aistudio.clock.app"
+                    "package_name": "$PKG_NAME"
                   }
                 },
                 "oauth_client": [],
@@ -68,7 +75,7 @@ jobs:
           }
           EOF
 
-          # 3. Update wrapper and build
+          # 4. Update wrapper and build APK
           gradle wrapper --gradle-version 9.3.1 --distribution-type bin
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
@@ -79,4 +86,3 @@ jobs:
           name: clock-debug-apk
           path: "**/app/build/outputs/apk/debug/*.apk"
           if-no-files-found: error
-          
