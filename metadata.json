@@ -1,0 +1,6 @@
+{
+  "name": "Clock",
+  "description": "Minimalist clock application featuring customizable alarms, world clock, precision stopwatch, clean timer, reminders with AI voice or ringtone options, custom color themes, and home screen widgets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
